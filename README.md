@@ -130,6 +130,26 @@ repository as published scientific record, with attribution. All code
 in this repository is MIT-licensed; results in `results/` are derived
 quantities.
 
+## Use of AI tools
+
+This work — both the research and this codebase — was carried out by the
+author in an interactive computational session with AI assistants
+(Anthropic's Claude: Fable 5 and Opus 4.8). The AI assisted with code
+implementation, numerical experiment design, diagnostics, literature
+positioning, and drafting, under the author's direction.
+
+The distinction that matters for trust: the AI was part of the
+**production process**, not part of the **trust chain** for the results.
+Every numerical claim rests on computation that you can re-run and on
+gates checked against external ground truth (the validated operator, the
+HWY profile/eigenpair residuals, the symmetry-eigenvalue identities) —
+never on a model's assertion. The code is conventional Python and is
+meant to be read, checked, and reproduced; the gate ladder in
+`docs/REPRODUCE.md` exists precisely so that nothing here has to be taken
+on faith. The author is responsible for the scientific content, the
+claims, and their verification. The mathematical correctness of the
+derivations has not yet been independently peer-reviewed.
+
 ## Citation
 
 See `CITATION.cff`. Please also cite Hou–Wang–Yang, arXiv:2509.25116,
