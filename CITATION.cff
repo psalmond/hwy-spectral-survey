@@ -26,4 +26,4 @@ preferred-citation:
        description: Zenodo preprint ID
      - type: doi
        value: "10.5281/zenodo.20675225"
-       description: arXiv DOI
+       description: Zenodo DOI
