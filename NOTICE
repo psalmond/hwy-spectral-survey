@@ -20,3 +20,10 @@ THEIRS (Hou-Wang-Yang; NOT included in this repository):
 
 If you are an HWY author and would like a different attribution or
 arrangement, please open an issue or contact the maintainer.
+
+AI-ASSISTED DEVELOPMENT:
+  This code and the accompanying research were produced with AI
+  assistance (Anthropic's Claude, Fable 5 and Opus 4.8) under the
+  author's direction. Results rest on reproducible computation and
+  gates against external ground truth, not on model assertions; see
+  the 'Use of AI tools' section of README.md.
