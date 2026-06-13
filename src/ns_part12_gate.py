@@ -49,7 +49,7 @@ from numpy.polynomial import legendre as npleg
 
 import os
 REPO = os.environ.get('HWY_REPO',
-        '../data/3d-navier-stokes-nonuniqueness-main')
+        '../data/3d-navier-stokes-nonuniqueness')
 S = 22.0   # scl_fac
 
 # ----------------------------------------------------- ported: conversion
@@ -125,8 +125,30 @@ class Field:
         return tmp @ A.T
 
 def load_profile(path, bdry_index=2):
-    d = sio.loadmat(path)
-    u1, u2, u3, p = d['u1'], d['u2'], d['u3'], d['p']
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"HWY data file not found at:\n    {os.path.abspath(path)}\n"
+            f"Set HWY_REPO to your clone of the HWY data repository so that\n"
+            f"'<HWY_REPO>/data/UP.mat' and '<HWY_REPO>/data/up_eig.mat' exist\n"
+            f"(current HWY_REPO default resolves REPO={REPO!r}).\n"
+            f"See data/README.md for where to obtain the data; check the\n"
+            f"exact filenames (case-sensitive: UP.mat, up_eig.mat).")
+    try:
+        d = sio.loadmat(path)
+    except Exception as e:
+        raise RuntimeError(
+            f"Found {path} but failed to read it as a MATLAB .mat file "
+            f"({type(e).__name__}: {e}). The file may be a newer (v7.3/HDF5) "
+            f"format or a different layout than this loader expects; see "
+            f"data/README.md and verify the data matches the campaign's.")
+    try:
+        u1, u2, u3, p = d['u1'], d['u2'], d['u3'], d['p']
+    except KeyError as e:
+        raise KeyError(
+            f"{path} loaded, but expected variable {e} is missing. Keys "
+            f"present: {[k for k in d if not k.startswith('__')]}. The data "
+            f"layout differs from what this pipeline expects (see "
+            f"data/README.md).")
     M1 = u1.shape[1]                                  # 150
     odd = lambda n: 2.0*np.arange(1, n+1) - 1.0
     evn = lambda n: 2.0*np.arange(1, n+1)

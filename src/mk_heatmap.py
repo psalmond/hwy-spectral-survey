@@ -28,7 +28,6 @@ a2.set_title(r'complex window: $\log_{10} r(\lambda)$ (no off-axis minima)',
              fontsize=9.5)
 fig.colorbar(im, ax=a2, shrink=0.9)
 fig.tight_layout()
-fig.savefig('/mnt/user-data/outputs/landscape_x5_full.pdf')
 fig.savefig('landscape_x5_full.pdf')
 print("heatmap written; grid min:", R.min(), "at Re,Im =",
       Re[np.unravel_index(R.argmin(), R.shape)[0]],

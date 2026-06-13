@@ -33,7 +33,10 @@ from ns_part12_gate import (basis, che2len, conv_u1, conv_u2, conv_10,
                             vnorm)
 
 import os
-DATA = os.environ.get('HWY_DATA', '../data/derived')
+# Single data root: the HWY repository clone (override with HWY_REPO).
+# Default assumes a clone placed at <repo>/data/3d-navier-stokes-nonuniqueness.
+HWY_REPO = os.environ.get('HWY_REPO', '../data/3d-navier-stokes-nonuniqueness')
+DATA = HWY_REPO + '/data'   # UP.mat, up_eig.mat live here
 LAM_KNOWN = 0.11314203274385946
 
 # ---------------------------------------------------------------- grids

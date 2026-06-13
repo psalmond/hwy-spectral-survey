@@ -30,7 +30,8 @@ import scipy.linalg as sla
 from ns_part3_spectrum import (make_grid, profile_grids, Sector, Lu_of,
                                zero_comp, LAM_KNOWN, S)
 
-DATA = '/home/claude/work/realNS_session9/data'
+import os
+DATA = os.environ.get('HWY_REPO', '../data/3d-navier-stokes-nonuniqueness') + '/data'
 
 def measure(geo, kind):
     B, T = geo['B'], geo['T']

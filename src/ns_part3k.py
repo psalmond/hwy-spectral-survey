@@ -32,7 +32,7 @@ from ns_part3_spectrum import adv, lap_vec
 
 import os
 REPO = os.environ.get('HWY_REPO',
-        '../data/3d-navier-stokes-nonuniqueness-main') + '/data'
+        '../data/3d-navier-stokes-nonuniqueness') + '/data'
 
 def fields_from_dict(d, kind):
     u1, u2, u3, p = d['u1'], d['u2'], d['u3'], d['p']
