@@ -1,4 +1,6 @@
 # hwy-spectral-survey
+Pre-print DOI: https://doi.org/10.5281/zenodo.20675225
+
 
 A calibrated spectral survey of the linearized Navier–Stokes operator at
 the Hou–Wang–Yang (HWY) self-similar profile
@@ -7,7 +9,7 @@ eigenvalues, the anatomy of a pseudospectral false positive, and a
 calibrated residual-landscape survey on a from-scratch decay-adapted
 divergence-free basis.
 
-**Paper:** `paper/preprint_survey_v4.pdf` (P. Salmond, draft v4).
+**Paper:** `paper/preprint_survey_v4.tex` (P. Salmond, draft PDF, https://doi.org/10.5281/zenodo.20675225).
 
 ## Headline results
 
