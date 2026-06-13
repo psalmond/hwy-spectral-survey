@@ -1,0 +1,22 @@
+PROVENANCE NOTICE — hwy-spectral-survey
+
+OURS (MIT, see LICENSE):
+  All source code in src/ : an independent Python implementation of the
+  linearized operator defined in Hou-Wang-Yang, arXiv:2509.25116
+  (their eq. for L_U), the divergence-free trial bases, assembly
+  kernels, landscape instrument, certification and diagnostics, and a
+  generic pure-Python MATLAB v7.3 reader (hdf5min.py).
+  All derived results in results/ (landscape arrays, figures) and the
+  paper in paper/.
+
+THEIRS (Hou-Wang-Yang; NOT included in this repository):
+  The data files of their public repository (self-similar profile,
+  certified eigenpair, phi-families, finite-rank tables). Their
+  repository publishes no license; this project therefore redistributes
+  none of it. The pipeline reads it at run time with attribution; see
+  data/README.md. The operator-layer modules intentionally mirror the
+  data formats and coordinate conventions of that repository
+  (interfaces and numerical constants), but contain no code from it.
+
+If you are an HWY author and would like a different attribution or
+arrangement, please open an issue or contact the maintainer.

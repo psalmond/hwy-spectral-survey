@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+data/3d-navier-stokes-nonuniqueness-main*
+src/*.npz
+src/*.log
+*.aux *.out *.toc
