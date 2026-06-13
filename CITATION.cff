@@ -11,10 +11,8 @@ license: MIT
 repository-code: "https://github.com/psalmond/hwy-spectral-survey"
 preferred-citation:
   type: article
-  title: "A calibrated spectral survey of the linearized operator at the
-  Hou-Wang-Yang self-similar profile: symmetry eigenvalues, the anatomy of
-  a pseudospectral false positive, and a calibrated landscape survey on a
-  decay-adapted divergence-free basis"
+  title: "A Calibrated Spectral Survey of the Linearized Operator at the Hou–Wang–Yang Self-Similar Profile: 
+  No second unstable eigenvalue in the odd axisymmetric sector: a calibrated residual-landscape survey."
   authors:
     - family-names: Salmond
       given-names: P.
