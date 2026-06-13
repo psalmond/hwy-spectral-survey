@@ -1,0 +1,160 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{mathtools}
+\usepackage[expansion=false]{microtype}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{booktabs}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks=true,linkcolor=RoyalBlue,urlcolor=RoyalBlue]{hyperref}
+\usepackage{titlesec}
+\titleformat{\paragraph}[runin]{\normalfont\bfseries\boldmath}{}{0pt}{}[\,---]
+\newcommand{\LU}{\mathbf{L}_{U}}
+\setlength{\parskip}{3.5pt}
+\title{\vspace{-1.4em}\bfseries A Calibrated Spectral Survey of $\LU$ at
+the Hou--Wang--Yang Profile\\[0.2em]\large\mdseries
+No second unstable eigenvalue in the odd axisymmetric sector
+\textemdash{} technical summary (companion to preprint v1.1)}
+\author{P.~Salmond}
+\date{\today}
+\begin{document}
+\maketitle
+\vspace{-1.8em}
+
+\begin{center}\itshape\small
+A from-scratch, gate-validated realization of $\LU$ reproduces the
+Hou--Wang--Yang eigenvalue $\lambda_1=0.113142$ to six significant
+figures and exhibits no second unstable eigenvalue in the odd
+axisymmetric sector at a calibrated sensitivity --- evidence for
+instability order one in that sector.
+\end{center}
+\vspace{0.4em}
+
+\paragraph{Question} Beyond your verified $\lambda_1 = 0.11314203\ldots$,
+does $\LU$ (arXiv:2509.25116, your eq.\ for the linearized operator)
+have further eigenvalues with $\operatorname{Re}\lambda > 0$ --- the
+\emph{instability order}, which sets the dimension of the nonuniqueness
+family? We survey the odd axisymmetric sector (the sector of
+$\lambda_1$) in floating point, with every claim gated and the
+instrument's sensitivity calibrated on $\lambda_1$ itself. Everything
+below is evidence-grade, not certified.
+
+\paragraph{Operator realization (trust anchors)} A pointwise Python
+realization of $\LU$ in your $(\beta,\theta)$ coordinates, evaluated
+against your published repository data (read at run time; not
+redistributed): profile-equation residual $6.2\times 10^{-9}$, stored
+eigenpair residual $1.7\times 10^{-5}$, archive md5-gated. Exact
+symmetry eigenvalues as a side result: $\LU(\partial_z U) =
+-\tfrac12\,\partial_z U$ and $\LU(U + \xi\!\cdot\!\nabla U) =
+-(U + \xi\!\cdot\!\nabla U)$, so no equation symmetry generates an
+unstable mode.
+
+\paragraph{Instrument} The gradient-deflated residual landscape
+\[
+r(\lambda) \;=\; \min_{v \in \mathcal{V},\, q}
+\frac{\|(\LU^{\mathrm{mom}} - \lambda) v - \nabla q\|_{L^2}}{\|v\|_{L^2}}
+\;=\;\sqrt{\lambda_{\min}\!\bigl(\tilde A_d
+ - \lambda \tilde G^{\!\top} - \bar\lambda \tilde G
+ + |\lambda|^2 I\bigr)},
+\]
+the second-order-relative-spectrum / residual-pseudospectrum distance
+function (the quantity underlying residual-DMD spectral validation;
+Levitin--Shargorodsky, Trefethen--Embree, Colbrook--Townsend), here
+realized for the divergence-free Navier--Stokes structure: $\mathcal{V}$
+is an exactly divergence-free
+(Stokes-stream) trial space, the scalar span absorbing $\nabla q$
+replaces the Leray projection, and the pencil is exactly quadratic in
+$\lambda$ because $\langle w, \nabla q\rangle = 0$ on our quadrature
+domain (verified to $4\times 10^{-13}$). A genuine eigenvalue whose
+eigenfunction the span represents produces a dip; the dip's attainable
+depth is governed by the law below. (Motivation: in our first survey,
+on the $\phi$-subspaces of your repository, a flagged second value
+$+0.036$ passed residual, jackknife, and negative-control checks yet
+was unmasked by this landscape as a pseudospectral shadow of
+$\lambda_1$ --- documented in the preprint as a cautionary case study.)
+
+\paragraph{Two numerical-analysis facts (known technique, silent traps)} Neither is new in isolation --- weighted quadrature for axis/pole singularities is standard since Bernardi--Dauge--Maday (1999), pressure elimination by divergence-free bases is textbook --- but both are invisible at the Rayleigh--Ritz pencil level and fatal to the operator-side Gram.
+(i) \emph{Open-domain exactness}: for div-free decaying $w$, the
+truncated-domain $\langle w, \nabla p\rangle$ equals the cut-edge flux
+exactly (numerical closure $2.3\times 10^{-13}$); the standard
+equatorial standoff $\theta \le \pi/2 - 0.04$ carries the
+\emph{entire} pressure term ($p$ is odd about the equator;
+$96\%$ of the operator output), while open-endpoint Gauss--Legendre on
+$(0,\pi/2)^2$ kills all four fluxes analytically --- the dropped term
+collapses $6.5\times 10^{4} \to 1.3\times 10^{-8}$.
+(ii) \emph{Operator domain}: radial factors with $R(0) \ne 0$ (including
+shell-Hermite $\psi_n$ inside the turning point) give
+$\|\LU w\|^2 \sim \int \rho^{-2} d\rho = \infty$: the pencil is fine
+but the operator-side Gram does not exist. The mask
+$m(\rho) = \rho^2/(\rho^2 + 4)$ on all radial factors (admissible for
+any $R$ in the Stokes-stream construction) cures it.
+
+\paragraph{Trial space designed from the measured target} On the open
+quarter domain the sector's Legendre families are orthogonal by
+parity, so $v_1$'s angular spectrum is an exact Parseval decomposition:
+the tail crosses $3\times 10^{-4}$ at $k = 102$. Per-$k$ least squares
+under the divergence-free tie show a dual-width radial requirement
+($\sigma = 2.5 \oplus 1.2$ shell-Hermite; single-width floor
+$8.4\times 10^{-4} \to 7\times 10^{-5}$), and license a taper
+(toroidal: 30 radial functions; poloidal $k \ge 40$: 46). Result:
+$N = 5366$, $v_1$ fit error $2.557\times 10^{-4}$, within a
+4\,GB/4-core budget.
+
+\paragraph{Gate ladder (selection)}
+\begin{center}\small
+\begin{tabular}{lll}
+\toprule
+separable/heterogeneous assembly vs.\ direct operator columns &
+$\le 5\times 10^{-15}$ & T4/T5/T6 \\
+Ritz recovery of $\lambda_1$ (two regularization cuts) &
+$|\mathrm{d}| = 3.0\times 10^{-4}$ & X1 \\
+$U \equiv 0$ control: $\max\operatorname{Re} \le -\tfrac14$ &
+$-0.61$ & X3 \\
+pressure-deflation floor on the exact eigenpair &
+$7.6\times 10^{-5}$ & calibration \\
+deflated operator Gram bottom, cut-stability & 7 digits & PSD \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Resolving power and calibration} The landscape floor obeys
+$r(\lambda_1) \lesssim \varepsilon_{\mathrm{pt}} + \mathcal{A}\,\delta$
+with $\delta$ the span's best-approximation error of the eigenfunction
+and $\mathcal{A}$ the operator amplification of the missing content.
+Measured: $\delta = 4.4\times 10^{-3} \Rightarrow$ flat landscape at
+$0.066$ (no valley); $\delta = 2.6\times 10^{-4} \Rightarrow$ valley of
+depth $9.3\times 10^{-3}$. The known $\lambda_1$ thus calibrates both
+the attainable depth and the location accuracy for any candidate.
+
+\paragraph{Results} Real axis $[-0.10, 0.30]$: a single smooth basin;
+fine-scan vertex at $\lambda = 0.113142$ ($\lambda_1$ to six
+significant figures); depth $r = 9.3141\times 10^{-3}$, reproduced
+\emph{pointwise} by an independent path (explicit arg-min field, one
+direct operator application, grid-level deflation: $9.3141\times
+10^{-3}$); raw values stable to $1.5\times 10^{-4}$ relative across
+cuts, so $\gtrsim 1\%$ local dips are detectable. Complex window
+$\operatorname{Re}\lambda \in [0,0.35]$, $\operatorname{Im}\lambda \in
+[0.05,0.60]$: $r$ strictly monotone in $\operatorname{Im}\lambda$ on
+every grid row; minimum $1.24\times 10^{-2}$ adjacent to the real-axis
+valley; no off-axis local minimum. \emph{Conclusion (scoped): no
+second unstable eigenvalue of $\LU$ in the odd axisymmetric sector at
+the instrument's stated sensitivity; instability order one in this
+sector.} Untouched: the even sector (surveyed only with the weaker
+$\phi$-span), all $m \ge 1$ sectors, and rigorous certification.
+
+\paragraph{What is and is not new here} The instrument is the residual-pseudospectrum / ResDMD validation principle applied to this operator, not a new method; the two facts above specialize standard axisymmetric-spectral practice. The elements we claim as new are the \emph{resolving-power law with its calibrate-on-$\lambda_1$ protocol} (turning a null survey into a quantified-sensitivity statement), the first spectral reconnaissance of $\LU$ beyond $\lambda_1$, and the documented false-positive case study.
+
+\paragraph{What we would value your view on} (1) Whether this survey
+and its negative are useful to your program and the community, and any
+errors you see, particularly in our reading of your data conventions.
+(2) Whether your certified finite-rank machinery could turn the
+sector-scoped negative into a rigorous enclosure. (3) Whether the data
+usage and attribution are as you would wish (your repository carries no
+license file; we redistribute none of it). (4) If you judge the work
+worth posting, we would be grateful for assistance with arXiv
+submission (endorsement for math.AP).
+
+\paragraph{Pointers} Preprint v1.1 (12 pp.) and the full pipeline
+--- gates, forensics, reproduction ladder with expected numbers ---
+at \url{https://github.com/psalmond/hwy-spectral-survey}.
+\end{document}

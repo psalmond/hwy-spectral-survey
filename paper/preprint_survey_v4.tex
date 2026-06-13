@@ -1,0 +1,821 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage[expansion=false]{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks=true,linkcolor=RoyalBlue,citecolor=RoyalBlue,
+            urlcolor=RoyalBlue,linktoc=all]{hyperref}
+\usepackage{cleveref}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Lsig}{L^2_\sigma(\R^3)}
+\newcommand{\LU}{\mathbf{L}_{U}}
+\newcommand{\rmin}{r_{\min}}
+\newcommand{\TODO}[1]{\textbf{[TODO: #1]}}
+\theoremstyle{plain}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\newtheorem*{observation}{Observation (standard; recorded for this setting)}
+% --- section headings: small-caps, tighter
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\large\bfseries\scshape}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus 1ex minus .2ex}{1ex}
+\setlist{leftmargin=1.4em,itemsep=2pt,topsep=3pt}
+
+\title{\bfseries A Calibrated Spectral Survey of the Linearized Operator
+at the Hou--Wang--Yang Self-Similar Profile\\[0.3em]
+\large\mdseries No second unstable eigenvalue in the odd
+axisymmetric sector: a calibrated residual-landscape survey}
+\author{P.~Salmond}
+\date{Version 1.1 \textemdash{} \today}
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent\textbf{Finding.}\enspace We survey the unstable spectrum of
+the linearized Navier--Stokes operator $\LU$ at the Hou--Wang--Yang
+self-similar profile (arXiv:2509.25116), asking whether eigenvalues
+exist beyond the verified $\lambda_1\approx 0.11314$ --- the
+\emph{instability order}, which controls the dimension of the
+nonuniqueness family. On a from-scratch, machine-precision-gated
+realization of $\LU$, a calibrated residual-landscape instrument
+recovers $\lambda_1$ to six significant figures and reveals \emph{no
+second} unstable eigenvalue in the odd axisymmetric sector, at a
+quantified sensitivity. This is evidence for instability order one in
+that sector; it is floating-point evidence, not a certified proof, and
+does not address the even or non-axisymmetric sectors.
+
+\smallskip
+\noindent\textbf{Contributions.}\enspace Concretely, the paper provides
+the following.
+\begin{itemize}
+\item \emph{Symmetry eigenvalues.} We identify two exact eigenpairs of
+$\LU$ in closed form --- the translation mode $\partial_z U$ at
+$-\tfrac12$ and the time-translation mode $U+\xi\!\cdot\!\nabla U$ at
+$-1$ --- so no symmetry of the equation yields an unstable mode and any
+second unstable eigenvalue must be genuinely new.
+\item \emph{A false-positive case study.} A Rayleigh--Ritz survey on the
+generalized-eigenfunction subspaces of the authors' repository
+(calibrated against $\lambda_1$ to $4.9\times10^{-6}$) flags a second
+positive value $+0.036$ that passes every standard check --- small
+eigen-residual, $25/25$ leave-one-out persistence, a negative control,
+quadrature stability --- yet a residual-landscape test (in the spirit
+of residual-pseudospectra / ResDMD validation) exposes it as a
+non-normal shadow of $\lambda_1$, not new spectrum. We recommend the
+landscape as a default robustness check for such surveys.
+\item \emph{A calibrated survey on a purpose-built basis.} We construct
+a decay-adapted, exactly divergence-free trial space (a Stokes-stream
+family with dual-width radial functions, designed from the measured
+spectrum of $v_1$; fit error $2.6\times10^{-4}$ at $N{=}5366$), survey
+the right half-plane, and find a unique landscape minimum at
+$\lambda=0.113142$ with pointwise-certified depth $9.3\times10^{-3}$,
+relative noise $1.5\times10^{-4}$, and no second minimum.
+\item \emph{A resolving-power law and calibration protocol.} We give and
+verify the relation: attainable landscape floor $\approx$
+(eigenfunction best-approximation error in the span) $\times$ (operator
+amplification of the missing content). Calibrating the instrument on
+the known $\lambda_1$ then fixes the depth and location standards
+against which any candidate dip --- and the absence of one --- is read.
+We also document two numerical-analysis pitfalls specific to
+operator-norm surveys of this class (an open-domain pressure-flux
+condition under parity-reduced quadrature, and an operator-domain
+constraint on decay-adapted radial families) and their standard cures.
+\end{itemize}
+All numerical statements are evidence-grade, not certified.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+
+\section{Introduction}
+The program of Jia--\v{S}ver\'ak \cite{JS15} and Guillod--\v{S}ver\'ak
+\cite{GS17} proposed self-similar linear instability as the mechanism for
+nonuniqueness of Leray--Hopf solutions. Albritton--Bru\`e--Colombo
+\cite{ABC22} realized the mechanism with forcing; Hou--Wang--Yang
+\cite{HWY25} (henceforth HWY) completed the unforced case via a
+computer-assisted proof, verifying a self-similar profile $U$ and a
+single unstable eigenvalue $\lambda_1 = +0.11314203\ldots$ of the
+linearized operator
+\begin{equation}\label{eq:LU}
+\LU v \;=\; \tfrac12 v + \tfrac12 \xi\!\cdot\!\nabla v + \Delta v
+- \mathbb{P}\left( U\!\cdot\!\nabla v + v\!\cdot\!\nabla U \right),
+\qquad v \in \Lsig ,
+\end{equation}
+acting in similarity variables $\xi = x/\sqrt{t}$, where $\mathbb{P}$ is
+the Leray projection. HWY establish that $\LU$ differs from the $U=0$
+operator by a compact perturbation, that the essential spectrum lies in
+$\{\operatorname{Re}\lambda \le -\tfrac14\}$, and that the remaining
+spectrum consists of finitely many finite-rank eigenvalues.
+
+A quantity of independent interest is the \emph{instability order} of
+the profile: the number of nontrivial eigenvalues with
+$\operatorname{Re}\lambda \ge 0$, modulo eigenvalues generated by the
+symmetries of the equation (cf.~\cite{WLGSB25} for this terminology in
+the singularity-formation context). Each additional unstable direction
+enlarges the unstable manifold along which distinct solutions emanate.
+To our knowledge no published work addresses the spectrum of the HWY
+operator beyond $\lambda_1$; the very recent construction of new
+unstable profile classes by Ionescu--Jia--Palasek \cite{IJP26}
+underscores active interest in the fine spectral structure of such
+operators, typically probed with shift-invert Krylov methods.
+
+This paper contributes on three fronts. First, the symmetry-generated
+eigenvalues of \eqref{eq:LU} can be written down exactly
+(Lemma~\ref{lem:symm}): they are $-\tfrac12$ and $-1$, both strictly
+stable, so for this operator the ``modulo symmetries'' proviso in the
+instability order is vacuous. Second, we document a structural
+obstruction to the most natural computational approach
+(Section~\ref{sec:obstruction}). Third --- and this is the
+methodological heart of the paper --- we carry out a carefully
+gate-calibrated subspace survey and show how it produces a
+\emph{false positive}: a flagged second unstable value that passes
+every standard robustness check yet is unmasked, by a test we believe
+should be routine, as a pseudospectral shadow of the known eigenvalue
+(Sections~\ref{sec:survey}--\ref{sec:landscape}). Fourth, we carry the
+program to its constructive conclusion: Section~\ref{sec:rebuild}
+builds the decay-adapted divergence-free basis that
+Section~\ref{sec:obstruction} shows is necessary, establishes the two
+numerical-analysis facts that make the operator-side instrument
+well-defined on it, formulates the resolving power of landscape
+instruments quantitatively, and reports a calibrated survey of the
+right half-plane in the odd axisymmetric sector whose unique landscape
+minimum reproduces $\lambda_1$ to six significant figures. The bottom
+line for the spectral question is a calibrated negative with stated
+sensitivity in that sector, and an open question elsewhere.
+
+\section{The validated operator and the projection method}\label{sec:method}
+\subsection{Setup}
+We work in the HWY coordinates $(\beta,\theta)\in[0,\pi/2]^2$ with
+$\rho = S\tan\beta$, $S=22$, physical fields carrying a $\cos\beta$
+envelope, and the published two-part radial trigonometric bases with
+divergence-free slaving of the polar component. Our realization of
+\eqref{eq:LU} transcribes the operator verbatim from a pipeline that
+reproduces the HWY profile equation residual to $6.2\times 10^{-9}$ and
+the eigenpair $(\lambda_1, v_1, p_1)$ residual to $1.7\times 10^{-5}$ on
+their published coefficient data.
+
+\subsection{Symmetry eigenvalues of $\LU$}\label{sec:symm}
+\begin{lemma}\label{lem:symm}
+Let $U$ solve the profile equation
+$\Delta U + \tfrac12 U + \tfrac12 \xi\cdot\nabla U
+- \mathbb{P}(U\cdot\nabla U) = 0$. Then
+\[
+\LU\,(\partial_z U) = -\tfrac12\,\partial_z U,
+\qquad
+\LU\,(U + \xi\cdot\nabla U) = -\,(U + \xi\cdot\nabla U).
+\]
+Both generators decay like $|\xi|^{-2}$ (the leading $|\xi|^{-1}$ parts
+cancel), hence are genuine $\Lsig$ eigenfunctions. Under the equatorial
+reflection symmetry of $U$, $\partial_z U$ is odd and
+$U + \xi\cdot\nabla U$ is even.
+\end{lemma}
+\begin{proof}
+Apply $\partial_z$ to the profile equation: every term commutes with
+$\partial_z$ except $\tfrac12\xi\cdot\nabla$, which produces the extra
+term $\tfrac12\partial_z U$; collecting terms gives the first identity.
+For the second, the one-parameter family $u(x, t+s)$ of time-translates
+yields, expanding $t^{-1/2}U(x/\sqrt{t+s})$ at $s=0$, the perturbation
+$\phi(\tau,\xi) = -\tfrac{s}{2}e^{-\tau}\,(U + \xi\cdot\nabla U)$ with
+$\tau = \log t$, i.e.\ an eigenfunction at $-1$; equivalently, apply
+$(1 + \xi\cdot\nabla)$ to the profile equation. Spatial dilation leaves
+the self-similar solution invariant and generates no mode. The decay
+claim follows from $U = c(\theta)|\xi|^{-1} + O(|\xi|^{-2})$: both
+$\partial_z$ and $1+\xi\cdot\nabla$ annihilate the
+$(-1)$-homogeneous leading term.
+\end{proof}
+
+\begin{remark}\label{rem:nontrivial}
+Translations sit at $-\tfrac12$ (equatorial-odd sector) and time
+translation at $-1$ (even sector); Galilean boosts fall outside
+$\Lsig$. Hence the symmetries of the equation contribute no eigenvalues
+with $\operatorname{Re}\lambda \ge 0$, and any unstable eigenvalue of
+$\LU$ beyond $\lambda_1$ would automatically be nontrivial in the sense
+of the instability order.
+\end{remark}
+
+\subsection{Projection spaces}
+The HWY repository ships two families of auxiliary fields used in their
+finite-rank verification: $\{\phi_j\}_{j=0}^{23}$ (odd sector) and
+$\{\Phi_j\}_{j=0}^{18}$ (even sector), stored in the same coefficient
+convention as the published eigenpair. We verified the convention
+identity exactly (the stored angular conversion matrices coincide
+bit-for-bit with ours) and that the repository's copies of the shared
+data files are byte-identical to those used in our validation gates.
+
+A computation central to the interpretation of what follows: the
+$\phi_j$ are \emph{not} individual eigenfunctions of $\LU$. With either
+sign convention for their stored labels, the relative eigen-equation
+residuals $\|(\LU-\lambda)\phi_j + \nabla p_j\|/\|\phi_j\|$ in truncated
+$L^2(\R^3)$ lie in $[0.35, 1.9]$ (Appendix~\ref{app:tables},
+Table~\ref{tab:phires}), against a calibration value of
+$1.1\times 10^{-5}$ for the published eigenpair evaluated by the same
+code path. They are internal objects of the HWY finite-rank
+construction; the spectrum of $\LU$ beyond $\lambda_1$ is not contained
+in the repository data.
+
+\subsection{Rayleigh--Ritz pencils and gates}
+For each sector we form $G_{ij} = \langle \psi_i,\ \LU^{\mathrm{mom}}
+\psi_j + \nabla p_j\rangle$ and $H_{ij} = \langle\psi_i,\psi_j\rangle$
+in true $L^2(\R^3)$ (Gauss--Legendre quadrature, $400\times 200$ nodes,
+streamed; $\LU^{\mathrm{mom}}$ the momentum-equation operator with each
+field's own stored pressure), where $\{\psi_i\}$ is the $\phi$-family
+augmented, in the odd sector, by the published eigenfunction $v_1$. The
+$\psi_i$ are honest $L^2$ shell functions in the odd sector (tail-mass
+fractions $\le 4.5\times 10^{-4}$ beyond $\rho \approx 57$), so the
+pencil is small and well conditioned ($\kappa(H)\approx 2.4\times 10^5$).
+
+Three gates anchor the instrument. \emph{Calibration}: the odd pencil
+reproduces $\lambda_1$ to $4.9\times 10^{-6}$. \emph{Negative control}:
+setting $U:=0$ empties the right half-plane (largest real part
+$-0.363$), consistent with the $U=0$ operator having no eigenvalues.
+\emph{Quadrature stability}: results are unchanged at $300\times 160$
+nodes.
+
+\section{The survey, and a candidate that passes every standard
+check}\label{sec:survey}
+The odd Ritz spectrum contains exactly two values with
+$\operatorname{Re}\lambda > -0.37$: the calibration value
+$+0.113147$ and a second \emph{real} value $+0.036278$. The candidate's
+credentials, as they accumulated, were substantial:
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Ritz value & pointwise residual $r$ & status \\
+\midrule
+$+0.113147$ & $1.1\times 10^{-5}$ & known eigenpair (calibration) \\
+$+0.036278$ & $3.9\times 10^{-2}$ & flagged candidate \\
+$-0.377 \pm 6.91 i$ & $1.1\times 10^{1}$ & span mixture (junk) \\
+\bottomrule
+\end{tabular}
+\end{center}
+Here $r$ is the eigen-equation residual of the Ritz \emph{vector},
+evaluated pointwise in truncated $L^2$ --- not a within-span quantity. A
+span of functions whose individual residuals are $O(1)$
+(Table~\ref{tab:phires}) thus contains a combination satisfying the
+eigen-equation to $3.9\%$. Furthermore, in a leave-one-out jackknife
+over the $25$ span columns, a positive real Ritz value persists in
+$25/25$ deletions (Table~\ref{tab:jackknife}), including the deletion of
+the $v_1$ column itself; the negative control and quadrature-stability
+gates pass; and the value is real and isolated. By the prevailing
+standards of numerical spectral surveys, this is a publishable
+candidate.
+
+It is not an eigenvalue. Two further tests expose it.
+
+\paragraph{Deflation.} The full-pencil candidate Ritz vector $v_2$ is
+strongly mixed with the known eigenfunction:
+$|\langle v_1, v_2\rangle| = 0.97$ in $L^2$. The $\phi$-family alone
+represents only $7.5\%$ of the energy of $v_1$ (computed exactly from
+the Gram matrix), and the $24$-dimensional $\phi$-only pencil retains a
+positive real Ritz value $+0.0325$ whose vector is orthogonal to $v_1$
+to four digits --- superficially reassuring. But the pointwise residual
+of that deflated vector is $0.395$: junk-level, indistinguishable from
+the individual-$\phi$ floor. The candidate's small residual is carried
+entirely by its $v_1$ component. This is consistent with a genuine
+nearly-parallel second eigenfunction (whose $v_1$-orthogonal part would
+carry residual
+$\approx \tfrac{0.97}{0.24}\,|\lambda_1-\lambda_2| \approx 0.31$), but
+equally consistent with non-normal shadowing of $\lambda_1$; deflation
+alone cannot decide.
+
+\section{The residual landscape: a decisive one-pass
+test}\label{sec:landscape}
+The discriminating instrument is the \emph{minimal residual achievable
+over the whole span as a function of the spectral parameter}:
+\[
+\rmin(\lambda)
+\;=\; \min_{c \ne 0}
+\frac{\|(A - \lambda M)\,c\|}{\|M c\|},
+\]
+where $M$, $A$ are the pointwise (quadrature-weighted) evaluations of
+the span fields and of $\LU^{\mathrm{mom}}$ applied to them. A single
+streamed pass accumulates the three small Gram matrices $A^{\!\top}\!A$,
+$A^{\!\top}\!M$, $M^{\!\top}\!M$, after which $\rmin(\lambda)$ for every
+$\lambda$ is a smallest-generalized-eigenvalue computation on
+$n\times n$ matrices. A genuine eigenvalue whose eigenfunction is
+representable in the span produces a dip toward zero at its location; a
+pseudospectral shadow of a single ill-conditioned eigenvalue produces
+one smooth valley, $\rmin(\lambda) \approx
+|\lambda - \lambda_1|/\kappa_{\mathrm{eff}}$, and nothing else.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{landscape.pdf}
+\caption{Residual landscapes. \emph{Left} (odd sector, semilog): a
+single pseudospectral valley centered on $\lambda_1$, reaching
+$1.1\times 10^{-5}$ at the bottom; no second dip at the flagged
+$+0.036$ (where $\rmin = 2.3\times 10^{-2}$ on a smooth flank, and
+$\rmin = 3.2\times 10^{-2}$ already at $\lambda = 0$), and none at the
+exact translation eigenvalue $-\tfrac12$, which this span does not
+represent. \emph{Right} (even sector, linear): no structure at all;
+$\rmin \ge 0.66$ everywhere, including at the flagged $+0.51$ and at
+the exact time-translation eigenvalue $-1$.}
+\label{fig:landscape}
+\end{figure}
+
+Figure~\ref{fig:landscape} settles the matter. The odd landscape is one
+smooth valley centered at $\lambda^\ast = +0.113144$ with floor
+$1.1\times 10^{-5}$; through the flagged value it passes at
+$2.3\times 10^{-2}$ with no local minimum anywhere in
+$[-1.2, +0.18]$ other than at $\lambda_1$. The flank slope corresponds
+to $\kappa_{\mathrm{eff}} \approx 3.6$, and the within-pencil
+biorthogonality condition number of $\lambda_1$ is $\approx 10$: mild
+non-normality, but ample. Indeed the shadow explanation requires only
+$\kappa(\lambda_1) \gtrsim |\lambda_1 - 0.036|/0.039 \approx 2$. Every
+credential of the candidate is thereby accounted for: the small
+single-vector residual (available at \emph{any} $\lambda$ in a wide
+band around $\lambda_1$), the jackknife persistence (the shadow is
+robust under column deletions because it needs only a trace of the
+$v_1$ direction plus non-normal coupling), and the value softness
+$\pm 0.026$ (a shadow has no location). The flagged $+0.036$ is the
+pseudospectrum of $\lambda_1$, photographed through a subspace.
+
+In the even sector the same instrument returns $\rmin \ge 0.66$ over
+all of $[-1.5, +0.8]$: the tail-heavy $\Phi_j$ (which carry
+$10$--$57\%$ of their $L^2$ mass beyond $\rho \approx 57$) have no
+spectral resolving power in truncated true $L^2$ at all. The lone
+positive even Ritz value (about $+0.51$ at the widest domain) --- which
+drifts with the integration domain ($+0.39 \to +0.42 \to +0.51$ for
+$\rho < 79, 178, 550$), overlaps $0.63$--$0.68$ with the exact
+$\lambda = -1$ eigenfunction of Lemma~\ref{lem:symm}, and coincides to
+$1.3\times 10^{-3}$ with an entry of the repository's finite-rank value
+table --- is noise from a span that cannot satisfy the eigen-equation
+anywhere. The even pencil supports no spectral conclusion in either
+direction.
+
+\paragraph{Conclusions of the survey.} (i) No evidence for a second
+unstable eigenvalue of $\LU$ in either parity sector at the resolution
+of the published subspaces; the instability order of the HWY profile
+remains an open question, constrained here only by the negative
+landscape within the spans. (ii) A subspace eigenvalue survey of a
+non-normal operator can produce a false positive that passes
+calibration, negative controls, pointwise residual checks, and
+jackknife resampling simultaneously; the residual landscape
+$\rmin(\lambda)$ --- one extra streamed pass --- is a cheap test that
+unmasks it, and we suggest it be reported alongside any Ritz-value
+claim of new spectrum for such operators, including in the
+shift-invert Krylov settings of current work \cite{IJP26,WLGSB25}.
+
+\section{Why direct Galerkin fails: a conditioning/band
+tradeoff}\label{sec:obstruction}
+The profile's representation basis carries a fixed $\cos\beta \sim
+1/\rho$ envelope, so individual basis elements are not in $L^2(\R^3)$:
+the true-$L^2$ Gram is dominated by far-field tails and is numerically
+singular under any domain cap. Conjugating by a weight
+$w = \cos^{2s}\beta \sim \rho^{-2s}$ repairs the Gram for $s>\tfrac12$
+but shifts the scaling term: $\tfrac12\rho\,\partial_\rho \mapsto
+\tfrac12\rho\,\partial_\rho + \tfrac{s}{2}$, moving the essential band
+to $\operatorname{Re}\lambda \le -\tfrac14 + \tfrac{s}{2}$. Resolving an
+eigenvalue $\lambda^\ast$ therefore requires
+$\tfrac12 < s < \tfrac12 + 2\lambda^\ast$; for
+$\lambda^\ast = \lambda_1 = 0.113$ the window is $(0.5, 0.726)$, and in
+systematic experiments across nine discretization variants (collocation,
+weak forms, Leray--Schur reduction, shift-invert Arnoldi, Jacobi-scaled
+whitening with stability matching) no scheme inside or outside the
+window stably recovered $\lambda_1$ at feasible resolutions. Any
+genuine survey of the unstable spectrum will require decay-adapted
+radial bases (rational Chebyshev or mapped Laguerre in $\rho$) with the
+divergence-free structure rebuilt accordingly, or an extension of the
+HWY certified finite-rank machinery itself.
+
+\section{A decay-adapted divergence-free basis and a calibrated
+landscape survey}\label{sec:rebuild}
+
+This section delivers the program that Section~\ref{sec:obstruction}
+identifies as necessary: a from-scratch trial space, in true unweighted
+$L^2$, that is exactly divergence-free, decay-adapted, and rich enough
+to give the landscape instrument quantified resolving power. Every
+assembly component below is gated against the validated pointwise
+operator realization at machine precision before use.
+
+\subsection{Construction, and two known-technique pitfalls the instrument needs to avoid}
+\label{sec:basisconstruction}
+In the odd axisymmetric sector we take Stokes-stream poloidal fields
+and toroidal fields
+\begin{equation}\label{eq:stokes}
+u_\rho = R(\rho)\,(k{+}1)(k{+}2)\,P_{k+1}(\mu),\quad
+u_\theta = -\bigl(2R + \rho R'\bigr)\sin\theta\,P'_{k+1}(\mu),\quad
+u_\phi = \tilde R(\rho)\sin\theta\,P'_{\tilde k+1}(\mu),
+\end{equation}
+with $\mu = \cos\theta$, $k$ even and $\tilde k$ odd (the sector
+parities), which are divergence-free identically for \emph{any} radial
+factor $R$ --- the Legendre identity
+$2\mu P' - (1-\mu^2)P'' = (k{+}1)(k{+}2)P$ closes the divergence term
+by term. Radial factors are drawn from composite families described
+below. Two facts govern the realization. Neither is deep in isolation
+--- handling axis/pole singularities by weighted quadrature is standard
+since Bernardi--Dauge--Maday \cite{BDM99}, and pressure elimination by
+divergence-free bases is textbook --- but both are \emph{invisible at
+the level of the $(G,H)$ Rayleigh--Ritz pencil} and both are fatal to
+the operator-side Gram $\langle \LU w_i,\LU w_j\rangle$ if ignored. We
+state them as the specific traps they form here, with their cures.
+
+\begin{observation}[Open-domain vanishing of the pressure-free weak
+form]
+\label{lem:opendomain}
+The content below is classical: the boundary-flux form of
+$\langle w,\nabla p\rangle$ is integration by parts, and handling
+axis/equator standoffs by weighted or open-node quadrature is standard
+spectral practice for axisymmetric domains \cite{BDM99}. We record it
+because the relevant failure mode is silent at the Rayleigh--Ritz
+pencil level. Let $w$ be exactly divergence-free and decaying, and let
+$\langle w, \nabla p\rangle$ be evaluated over the truncated quarter
+domain $(\beta,\theta) \in [\beta_0, \tfrac\pi2 - \epsilon_\beta]
+\times [\theta_0, \tfrac\pi2 - \epsilon_\theta]$. Then the integral
+equals the boundary flux $\oint p\, w\!\cdot\!n$ through the four cut
+edges exactly. In the odd sector $p$ is odd about the equator (sector
+consistency of the $\theta$-momentum parity), $w_\theta \sim \sin\theta$
+at the axis, $w_\rho \sim \rho^2$-regularizable at the origin, and all
+fields decay at infinity, so on the \emph{open} quarter domain
+$(0,\tfrac\pi2)^2$ --- realized by Gauss--Legendre quadrature, whose
+nodes never touch the endpoints --- all four fluxes vanish and the
+pressure term drops identically from the weak form. What is specific to
+the present work is only the \emph{diagnosis} --- that the customary
+small equatorial standoff, rather than being a harmless truncation,
+carries essentially the entire pressure term in the odd sector --- and
+its quantification below.
+\end{observation}
+
+Numerically: the edge-flux attribution closes to $2.3\times 10^{-13}$,
+the equatorial standoff edge $\theta = \tfrac\pi2 - 0.04$ carries the
+\emph{entire} pressure term (ratio $1.000$; the stored eigenpressure
+vanishes linearly at the equator, $p(\tfrac\pi2{-}\varepsilon)/
+\varepsilon \to -126.69$), and switching to open-endpoint quadrature
+collapses the dropped term by twelve orders of magnitude,
+$\|d\| : 6.5\times 10^{4} \to 1.3\times 10^{-8}$
+($4\times 10^{-13}$ relative). On the standoff domain the pressure
+term is $96\%$ of the operator output and the pencil's leading Ritz
+value is wrong by $0.14$; on the open domain the same pencil recovers
+$\lambda_1$ with $|\mathrm{d}| = 6.5\times 10^{-4}$, later refined to
+$4.5\times 10^{-5}$. We flag this (the Observation above) for any
+parity-reduced axisymmetric computation that drops pressure by
+divergence-freeness: the standard small standoff does not produce a
+small error.
+
+\medskip\noindent\textbf{An operator-domain constraint on the radial
+families (elementary, but easily missed).}\enspace
+A radial factor with $R(0)\ne 0$ gives $u_\rho \sim P_{k+1}(\mu)$ at the
+origin; the pencil entries
+$\langle w, \LU w'\rangle \sim \int \rho^{-2}\rho^2\,d\rho$ converge,
+but $\|\LU w\|^2 \sim \int \rho^{-2}\,d\rho$ \emph{diverges}: such
+fields are not in the operator domain, and the operator-side Gram does
+not exist. This afflicts not only Laguerre-type families but
+shell-Hermite functions, since $\psi_n((0-\rho_0)/\sigma)$ lies inside
+the classical turning point for $n \gtrsim (\rho_0/\sigma)^2/2$
+(here $\psi_n(-8) = O(0.1)$ for $n \ge 32$); we observed quadrature
+samples of the divergent integral reaching $6\times 10^{18}$.
+Multiplying every radial factor by
+$m(\rho) = \rho^2/(\rho^2 + a^2)$ ($a = 2$) preserves
+divergence-freeness (any $R$ is admissible in \eqref{eq:stokes}),
+perturbs the shell physics at the $10^{-2}$ level
+($m(20) = 0.990$), and renders $\|\LU w\| \in L^2$; afterwards the
+deflated operator Gram is positive and stable to seven digits across
+regularization cuts. The point is elementary once stated; we flag it
+only because, like the standoff above, it is invisible to the
+$(G,H)$ pencil and surfaces only when one forms the operator-side
+Gram.
+
+The landscape itself is the gradient-deflated quadratic pencil
+\begin{equation}\label{eq:pencil}
+r(\lambda)^2 = \lambda_{\min}\!\left(
+\tilde A_d - \lambda\,\tilde G^{\!\top} - \bar\lambda\,\tilde G
++ |\lambda|^2 I \right),\qquad
+\tilde A_d = \text{whitened}\bigl(\mathsf{AA} - B M^{+} B^{\!\top}\bigr),
+\end{equation}
+the second-order-relative-spectrum / residual-pseudospectrum
+distance function \cite{LS04,TE05,Colbrook23} --- the same quantity
+underlying residual-DMD spectral validation --- here realized for the
+divergence-free Navier--Stokes structure: the
+gradient span (a calibrated scalar pressure family; deflation floor
+$7.6\times 10^{-5}$ on the exact eigenpair) absorbs the Leray
+projection, and the coupling block $B$ is $\lambda$-independent because
+$\langle w, \nabla q\rangle = 0$ on the open domain
+(by the Observation above; verified to $4\times 10^{-13}$), so
+\eqref{eq:pencil} is exactly quadratic in $\lambda$. Assembly is
+separable throughout; the kernels are gated against direct columnwise
+application of the validated operator at $10^{-15}$--$10^{-16}$
+(gates T4/T5/T6, Table~\ref{tab:gates}).
+
+\subsection{Resolving power of landscape instruments}
+\label{sec:resolvingpower}
+A landscape can only certify what its span can represent. Writing
+$v_1 = v_{\mathrm{fit}} + e$ with $\delta = \|e\|/\|v_1\|$ the
+best-approximation error of the eigenfunction in the span, the valley
+depth obeys
+\begin{equation}\label{eq:rplaw}
+r(\lambda_1) \;\lesssim\; \varepsilon_{\mathrm{pt}}
+\;+\; \mathcal{A}\,\delta,
+\end{equation}
+where $\varepsilon_{\mathrm{pt}}$ is the pointwise eigenpair quality
+($1.8\times 10^{-5}$ here) and $\mathcal{A}$ is the operator's
+amplification of the missing content $e$ --- for shell-localized
+high-degree content,
+$\mathcal{A} \sim \max(k^2/\rho_{\mathrm{shell}}^2,\,
+2n/\sigma^2,\ldots) = O(10$--$10^2)$. The law is sharp in our data:
+at $\delta = 4.4\times 10^{-3}$ the landscape is flat at
+$0.066 \approx \mathcal{A}\delta$ with \emph{no} valley; at
+$\delta = 2.6\times 10^{-4}$ the valley appears with depth
+$9.3\times 10^{-3}$; and it retrodicts the
+$1.1\times 10^{-5}$ floor of Section~\ref{sec:landscape}, whose span
+contains $v_1$ by construction ($\delta \approx 0$). The protocol that
+\eqref{eq:rplaw} licenses: \emph{calibrate the instrument on the known
+eigenvalue} --- its valley fixes the achievable depth and the location
+accuracy --- and read any candidate dip against those standards and
+against the measured cut-to-cut noise.
+
+\subsection{Designing the span from the measured target}
+\label{sec:design}
+Rather than guessing families, we measure $v_1$. On the open quarter
+domain the odd-degree Legendre families of \eqref{eq:stokes} are
+mutually orthogonal by parity, so the angular spectrum of each
+component is an exact Parseval decomposition (gates $1.00000000$): the
+combined angular tail crosses $3\times 10^{-4}$ at $k = 102$ and
+reaches $3.6\times 10^{-5}$ by $k = 120$ --- the entire
+$4.4\times 10^{-3}$ fit plateau of the first build was angular
+truncation at $k \le 78$. Radially, per-$k$ least squares under the
+true divergence-free tie ($R$ drives $u_\rho$ while $2R + \rho R'$
+drives $u_\theta$, jointly) show a single-width shell-Hermite floor of
+$8.4\times 10^{-4}$, broken to $7\times 10^{-5}$ by a \emph{dual-width}
+family $\sigma = 2.5 \oplus \sigma = 1.2$ (a self-similar
+log-Gaussian shell lattice also breaks the single-width floor, to
+$5.1\times 10^{-4}$ in union; the eigenfunction's radial structure is
+multi-width at one location rather than multi-scale in position).
+Finally, the same per-$k$ data licenses a \emph{taper}: the toroidal
+component ($0.1\%$ of energy but the same angular decay rate) needs
+only $30$ radial functions, and the poloidal blocks with $k \ge 40$
+only $46$, so with per-block Cholesky orthonormalization (order-
+preserving, hence nested) the span
+\[
+\underbrace{96 \times \{k \le 38\}}_{\text{poloidal, full}}
+\;\cup\;
+\underbrace{46 \times \{40 \le k \le 120\}}_{\text{poloidal, slim}}
+\;\cup\;
+\underbrace{30 \times \{\tilde k \le 103\}}_{\text{toroidal}}
+\]
+has $N = 5366$ and fits $v_1$ to $2.557\times 10^{-4}$ --- a
+$17\times$ improvement over the first build at three-quarters of a
+percent more columns, within a 3\,GB memory budget.
+
+\subsection{The calibrated survey}\label{sec:calibsurvey}
+Gates: heterogeneous-block assembly of $G$, $H$, $\mathsf{AA}$ agrees
+with direct operator columns to $5.8\times 10^{-16}$,
+$4.8\times 10^{-16}$, $4.7\times 10^{-16}$; the Ritz pencil recovers
+$\lambda_1$ with $|\mathrm{d}| = 3.0\times 10^{-4}$
+($4.5\times 10^{-5}$ on the un-tapered variant) and passes the $U=0$
+negative control at both regularization cuts; the deflated operator
+Gram is positive with bottom eigenvalue stable to seven digits across
+cuts; and no second Ritz value with $\operatorname{Re}\lambda > 0$
+appears in this or any of the three preceding basis layouts.
+
+The landscape over the real axis $[-0.10, +0.30]$
+(Figure~\ref{fig:landscape5}) is a single smooth basin: monotone
+descent, a unique minimum, monotone ascent, with raw values stable to
+$1.5\times 10^{-4}$ \emph{relative} between regularization cuts, so
+local dips of $\gtrsim 1\%$ of the backdrop are detectable. The fine
+scan places the vertex at
+\[
+\lambda^\ast = +0.113142, \qquad
+\lambda_1 = +0.1131420\ldots,
+\]
+agreement to six significant figures --- three orders sharper than the
+Ritz value, as expected for a vertex versus a stationary quantity. The
+valley depth $r(\lambda^\ast) = 9.3141\times 10^{-3}$ is
+\emph{certified pointwise}: the arg-min vector, rebuilt as an explicit
+field and passed once through the validated operator with explicit
+grid-level gradient deflation, returns $9.3141\times 10^{-3}$
+(jitter-stable), in agreement with the Gram pipeline to all printed
+digits and consistent with \eqref{eq:rplaw} at
+$\mathcal{A} \approx 36$. Over the complex window
+$\operatorname{Re}\lambda \in [0, 0.35]$,
+$\operatorname{Im}\lambda \in [0.05, 0.60]$ (conjugate symmetry
+covers $\operatorname{Im}\lambda < 0$), $r$ increases strictly
+monotonically in $\operatorname{Im}\lambda$ along every grid row, the
+row minima track the real-axis basin (grid minimum
+$1.24\times 10^{-2}$ at $\lambda = 0.10 + 0.05i$, adjacent to the
+valley), and no off-axis local minimum exists anywhere in the window
+(Figure~\ref{fig:landscape5}, right panel): no candidate
+complex-conjugate pair of unstable eigenvalues at the instrument's
+sensitivity.
+
+\paragraph{Conclusion.} The question we set out to address ---
+does $\LU$ carry unstable spectrum beyond $\lambda_1$? --- has, in the
+odd axisymmetric sector, a clear floating-point answer: \emph{no}. The
+residual landscape of a from-scratch, gate-validated, decay-adapted
+divergence-free realization of $\LU$ has exactly one minimum in the
+surveyed right half-plane, at $\lambda_1$ (located to six figures,
+depth certified pointwise), and none elsewhere down to the calibrated
+sensitivity. Read through the resolving-power law, a hypothetical
+$\lambda_2$ would have escaped detection only if its eigenfunction were
+worse-approximated by our span than $v_1$ is (fit
+$2.6\times10^{-4}$) by more than the depth margin --- a possibility the
+calibration makes explicit and bounds, rather than hides.
+
+We emphasize what this is and is not. The instrument is not new: it is
+the residual-pseudospectrum / ResDMD validation principle
+\cite{Colbrook23,TE05,LS04} applied to the Navier--Stokes structure.
+The two numerical facts of Section~\ref{sec:basisconstruction} are
+specializations of standard axisymmetric-spectral practice
+\cite{BDM99}, recorded here because they are silent at the pencil level
+and fatal at the operator-norm level. The new elements we do claim are
+the resolving-power law with its calibrate-on-$\lambda_1$ protocol ---
+which turns a null survey into a quantified-sensitivity statement ---
+and the first spectral reconnaissance of this operator beyond
+$\lambda_1$, together with the false-positive case study that motivates
+the discipline. The even sector (surveyed here only with the weaker
+$\phi$-span) and the non-axisymmetric sectors remain open, as does
+certification in the rigorous sense; the natural next step is to feed a
+sector's confirmed unstable count into the authors' finite-rank
+certified machinery.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{landscape_x5_full.pdf}
+\caption{Calibrated residual landscape on the tapered decay-adapted
+basis ($N = 5366$, $v_1$ fit $2.56\times 10^{-4}$). \emph{Left}
+(real axis, semilog): one smooth basin; vertex at
+$\lambda = 0.113142$ ($\lambda_1$ to six figures); depth
+$9.31\times 10^{-3}$, certified pointwise and stable to
+$1.5\times 10^{-4}$ relative across regularization cuts; no second
+minimum. \emph{Right} ($\log_{10} r$ over the complex window): strict
+monotone increase in $\operatorname{Im}\lambda$ on every row; the
+star marks $\lambda_1$; no off-axis local minimum.}
+\label{fig:landscape5}
+\end{figure}
+
+\section{Limitations}
+All statements are floating-point. The $\phi$-span survey of
+Sections~\ref{sec:survey}--\ref{sec:landscape} is in addition
+truncated-domain, and its negative is evidence of absence only within
+the published subspaces. The calibrated survey of
+Section~\ref{sec:rebuild} removes the domain truncation
+(via the Observation in Section~\ref{sec:basisconstruction}) and quantifies its own sensitivity, but
+its conclusions are scoped: (i) to the odd axisymmetric sector --- a
+second unstable eigenvalue in the even or any non-axisymmetric sector
+would be invisible here; (ii) to the surveyed window of the right
+half-plane; and (iii) to the resolving-power bound \eqref{eq:rplaw} ---
+a genuine eigenvalue whose eigenfunction the span fits worse than
+$\sim 10^{-3}$ could produce a dip shallower than the certified
+$\lambda_1$ valley and demand refinement before classification.
+The symmetry eigenvalues of Lemma~\ref{lem:symm} are exact identities
+given the profile equation, but our consistency checks of them through
+the pencils are indirect (the spans do not represent either generator
+well). The obstruction of Section~\ref{sec:obstruction} is an empirical
+result across nine discretization families plus a conjugation
+computation, not a theorem.
+
+\paragraph{Data and code.} Our survey reads the public HWY repository
+data (profile, eigenpair, and auxiliary $\phi$-families) as published
+scientific record, with attribution. That repository carries no license
+file, so we do not redistribute any of its contents: our released code
+fetches the data from the authors' public repository at run time, and
+all results here are derived quantities. Our full pipeline --- operator
+realization and gate ladder, projection survey, the decay-adapted basis
+and tapered assembly, the residual-landscape instrument with its
+calibration protocol, forensic diagnostics, and a self-contained
+pure-Python reader for MATLAB v7.3 files --- is released at
+\url{https://github.com/psalmond/hwy-spectral-survey} under the MIT
+license, together with the small result arrays and figure scripts;
+the large intermediate Gram caches are regenerable from the scripts in
+under an hour on a 4-core/4\,GB machine.
+
+\begin{thebibliography}{9}
+\bibitem{JS15} H.~Jia, V.~\v{S}ver\'ak, \emph{Are the incompressible 3d
+Navier--Stokes equations locally ill-posed in the natural energy space?},
+J.~Funct.~Anal.~268 (2015).
+\bibitem{GS17} J.~Guillod, V.~\v{S}ver\'ak, \emph{Numerical
+investigations of non-uniqueness for the Navier--Stokes initial value
+problem in borderline spaces}, arXiv:1704.00560.
+\bibitem{ABC22} D.~Albritton, E.~Bru\`e, M.~Colombo, \emph{Non-uniqueness
+of Leray solutions of the forced Navier--Stokes equations},
+Ann.~of~Math.~196 (2022).
+\bibitem{HWY25} T.~Y.~Hou, Y.~Wang, C.~Yang, \emph{Nonuniqueness of
+Leray--Hopf solutions to the unforced incompressible 3D Navier--Stokes
+equation}, arXiv:2509.25116.
+\bibitem{IJP26} A.~D.~Ionescu, H.~Jia, S.~Palasek, \emph{On the
+non-uniqueness of solutions of the axi-symmetric swirl-free
+Navier--Stokes equations, I}, arXiv:2606.07501.
+\bibitem{Colbrook23} M.~J.~Colbrook, A.~Townsend, \emph{Rigorous
+data-driven computation of spectral properties of Koopman operators for
+dynamical systems} (residual DMD), Comm.~Pure Appl.~Math.~(2024).
+\bibitem{BDM99} C.~Bernardi, M.~Dauge, Y.~Maday, \emph{Spectral Methods
+for Axisymmetric Domains}, Gauthier--Villars (1999).
+\bibitem{LS04} M.~Levitin, E.~Shargorodsky, \emph{Spectral pollution
+and second-order relative spectra for self-adjoint operators}, IMA
+J.~Numer.~Anal.~24 (2004).
+\bibitem{TE05} L.~N.~Trefethen, M.~Embree, \emph{Spectra and
+Pseudospectra}, Princeton Univ.~Press (2005).
+\bibitem{WLGSB25} Y.~Wang et al., \emph{Discovery of unstable
+singularities}, arXiv:2509.14185.
+\end{thebibliography}
+
+\appendix
+\section{Tables}\label{app:tables}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llll}
+\toprule
+Gate & Tests & Result & Status \\
+\midrule
+T4 & separable $G$/$H$ assembly vs.\ direct operator columns &
+$3.8\times 10^{-16}$ / $4.0\times 10^{-16}$ & pass \\
+T5 & separable $\mathsf{AA}$/$B$ grams vs.\ direct &
+$1.6\times 10^{-15}$ / $2.5\times 10^{-15}$ & pass \\
+T6 & heterogeneous (tapered) $G$/$H$/$\mathsf{AA}$ vs.\ direct &
+$5.8$/$4.8$/$4.7\times 10^{-16}$ & pass \\
+X0r & $v_1$ fit in the tapered span &
+$2.557\times 10^{-4}$ & pass \\
+X1 & Ritz recovery of $\lambda_1$ (both cuts) &
+$|\mathrm{d}| = 3.0\times 10^{-4}$ & pass \\
+X3 & $U \equiv 0$ negative control, $\max\operatorname{Re} \le
+-\tfrac14$ & $-0.61$ & pass \\
+-- & pressure-deflation floor on exact eigenpair (control B) &
+$7.6\times 10^{-5}$ & calibrated \\
+-- & pointwise certification of the landscape valley &
+$9.3141\times 10^{-3}$ (= pipeline) & certified \\
+-- & open-domain pressure term $\|\langle w,\nabla p\rangle\|$ &
+$4\times 10^{-13}$ relative & exact \\
+\bottomrule
+\end{tabular}
+\caption{Gate ladder of the decay-adapted realization
+(Section~\ref{sec:rebuild}).}
+\label{tab:gates}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\caption{Per-$\phi$ eigen-equation residuals
+$r_j = \|(\LU-\lambda_j)\phi_j + \nabla p_j\|/\|\phi_j\|$ in truncated
+true $L^2$, Gauss--Legendre $400\times 200$. Labels $\lambda_j$ are the
+stored values under the physical sign convention; the same test with the
+opposite convention gives residuals of the same order. The published
+eigenpair, evaluated by the identical code path, calibrates the
+instrument at $1.1\times 10^{-5}$.}\label{tab:phires}
+\vspace{4pt}
+\small
+\begin{tabular}{lrr@{\hspace{2.5em}}lrr}
+\toprule
+field & $\lambda_j$ & $r_j$ & field & $\lambda_j$ & $r_j$ \\
+\midrule
+$\phi_{00}$ & $+0.100658$ & $0.588$ & $\phi_{13}$ & $-0.019045$ & $1.911$ \\
+$\phi_{01}$ & $-0.293799$ & $1.302$ & $\phi_{14}$ & $-0.068059$ & $0.450$ \\
+$\phi_{02}$ & $-0.192318$ & $1.094$ & $\phi_{15}$ & $+0.001358$ & $1.000$ \\
+$\phi_{03}$ & $-0.051432$ & $0.650$ & $\phi_{16}$ & $-0.019130$ & $0.406$ \\
+$\phi_{04}$ & $-0.077579$ & $0.721$ & $\phi_{17}$ & $+0.027696$ & $0.482$ \\
+$\phi_{05}$ & $+0.037446$ & $0.584$ & $\phi_{18}$ & $-0.028408$ & $0.415$ \\
+$\phi_{06}$ & $+0.075440$ & $0.598$ & $\phi_{19}$ & $+0.010260$ & $0.645$ \\
+$\phi_{07}$ & $+0.035454$ & $0.557$ & $\phi_{20}$ & $+0.026733$ & $0.661$ \\
+$\phi_{08}$ & $-0.056414$ & $0.758$ & $\phi_{21}$ & $-0.010341$ & $1.109$ \\
+$\phi_{09}$ & $+0.029192$ & $0.553$ & $\phi_{22}$ & $-0.033742$ & $0.377$ \\
+$\phi_{10}$ & $+0.019826$ & $0.352$ & $\phi_{23}$ & $+0.001738$ & $0.847$ \\
+$\phi_{11}$ & $+0.039902$ & $0.687$ & $v_1$ & $+0.113142$ & $1.1\times 10^{-5}$ \\
+$\phi_{12}$ & $+0.046410$ & $0.392$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Leave-one-out jackknife over the $25$ odd span columns
+(column $24$ is the published eigenfunction $v_1$). Entries are the
+positive real Ritz values of each $24$-dimensional sub-pencil. The
+calibration value is reproduced to $\le 10^{-5}$ in every deletion
+except that of $v_1$ itself, where it disappears (the $\phi$-span holds
+only $7.5\%$ of the energy of $v_1$). The shadow value persists in all
+$25$ deletions --- illustrating that resampling stability is not
+evidence of spectrum for non-normal operators.}
+\label{tab:jackknife}
+\vspace{4pt}
+\small
+\begin{tabular}{lcc@{\hspace{2.5em}}lcc}
+\toprule
+dropped & calib. & shadow & dropped & calib. & shadow \\
+\midrule
+$\phi_{00}$ & $+0.113139$ & $+0.052145$ & $\phi_{13}$ & $+0.113147$ & $+0.033439$ \\
+$\phi_{01}$ & $+0.113147$ & $+0.028988$ & $\phi_{14}$ & $+0.113146$ & $+0.036862$ \\
+$\phi_{02}$ & $+0.113150$ & $+0.059769$ & $\phi_{15}$ & $+0.113147$ & $+0.035744$ \\
+$\phi_{03}$ & $+0.113146$ & $+0.010028$ & $\phi_{16}$ & $+0.113147$ & $+0.037590$ \\
+$\phi_{04}$ & $+0.113147$ & $+0.040644$ & $\phi_{17}$ & $+0.113147$ & $+0.050704$ \\
+$\phi_{05}$ & $+0.113147$ & $+0.037017$ & $\phi_{18}$ & $+0.113147$ & $+0.024921$ \\
+$\phi_{06}$ & $+0.113147$ & $+0.013393$ & $\phi_{19}$ & $+0.113147$ & $+0.031763$ \\
+$\phi_{07}$ & $+0.113146$ & $+0.033805$ & $\phi_{20}$ & $+0.113146$ & $+0.037109$ \\
+$\phi_{08}$ & $+0.113146$ & $+0.044386$ & $\phi_{21}$ & $+0.113147$ & $+0.032896$ \\
+$\phi_{09}$ & $+0.113146$ & $+0.032827$ & $\phi_{22}$ & $+0.113146$ & $+0.046610$ \\
+$\phi_{10}$ & $+0.113147$ & $+0.038232$ & $\phi_{23}$ & $+0.113147$ & $+0.060361$ \\
+$\phi_{11}$ & $+0.113147$ & $+0.033812$ & $v_1$ & --- & $+0.032461$ \\
+$\phi_{12}$ & $+0.113147$ & $+0.039676$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
