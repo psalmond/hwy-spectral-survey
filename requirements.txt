@@ -1,3 +1,5 @@
 numpy>=1.24
-scipy>=1.10
+scipy>=1.10        # scipy.io.loadmat reads classic-format UP.mat / up_eig.mat
 matplotlib>=3.7
+# Note: MATLAB v7.3 (HDF5) phi_* files are read by src/hdf5min.py
+# (pure-Python, bundled) -- no h5py or MATLAB required.
