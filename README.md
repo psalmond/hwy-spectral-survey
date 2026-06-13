@@ -1,5 +1,8 @@
 # hwy-spectral-survey
-Pre-print DOI: https://doi.org/10.5281/zenodo.20675225
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20675559.svg)](https://doi.org/10.5281/zenodo.20675559)
+
+**Preprint (Zenodo, v1.1, CC BY 4.0):** https://doi.org/10.5281/zenodo.20675559
 
 
 A calibrated spectral survey of the linearized Navier–Stokes operator at
@@ -9,7 +12,7 @@ eigenvalues, the anatomy of a pseudospectral false positive, and a
 calibrated residual-landscape survey on a from-scratch decay-adapted
 divergence-free basis.
 
-**Paper:** `paper/preprint_survey_v4.tex` (P. Salmond, draft PDF, https://doi.org/10.5281/zenodo.20675225).
+**Paper:** P. Salmond, v1.1 — PDF of record at [doi.org/10.5281/zenodo.20675559](https://doi.org/10.5281/zenodo.20675559); LaTeX source in `paper/`.
 
 ## Headline results
 
@@ -35,7 +38,7 @@ src/        all Python (flat module layout; scripts import by name)
   ns_part12_gate.py     gate-validated pointwise operator realization
   ns_part3k.py, ns_part3f.py, ns_part3_spectrum.py
                         operator application (Lcols), geometry, quadrature
-  hdf5min.py            self-contained pure-Python MATLAB v7.3 reader
+  hdf5min.py            pure-Python MATLAB v7.3 (HDF5) reader; no h5py/MATLAB needed
   nsx_basis.py, nsx_op.py, nsx_x2_aa.py
                         Stokes-stream div-free basis; separable assembly
                         kernels (gates T4/T5)
@@ -45,7 +48,7 @@ src/        all Python (flat module layout; scripts import by name)
   nsx_x5r.py            pointwise certification of the landscape valley
   mk_heatmap.py         figures
   nsx_diag*.py, nsx_x0*.py, nsx_r1*.py, nsx_x4*.py, nsx_fitres.py
-                        forensic diagnostics: the open-domain lemma
+                        forensic diagnostics: the open-domain quadrature
                         demonstrations, operator-domain divergence,
                         target spectroscopy, radial-family shootout,
                         resolving-power measurements (paper §6)
@@ -79,23 +82,26 @@ Full expected outputs, runtimes, and tolerances: `docs/REPRODUCE.md`.
 This repository and the accompanying preprint are the work of
 **P. Salmond**. The following are introduced here and should be
 attributed accordingly if reused or built upon (full statements and
-derivations in `paper/preprint_survey_v4.pdf`):
+derivations in the preprint, Zenodo DOI above):
 
-- the **open-domain pressure lemma** — for divergence-free decaying
-  fields, the weak-form pressure term equals the cut-edge flux exactly,
-  vanishing under open-endpoint quadrature of the parity-reduced
-  quarter domain but $O(1)$ under the standard equatorial standoff;
-- the **operator-domain regularization** — radial factors with
-  $R(0)\ne 0$ lie outside the operator domain
-  ($\|\mathbf{L}_U w\|\notin L^2$); the mask $\rho^2/(\rho^2+a^2)$
-  cures it while preserving divergence-freeness;
 - the **resolving-power law and calibration protocol** for residual
-  landscapes (floor $\approx$ eigenfunction best-approximation error
-  $\times$ operator amplification), calibrated against the known
-  eigenvalue;
+  landscapes (attainable floor $\approx$ eigenfunction
+  best-approximation error $\times$ operator amplification),
+  calibrated against the known eigenvalue — the main methodological
+  claim;
+- the **first spectral reconnaissance** of this operator beyond
+  $\lambda_1$, and the **documented false-positive case study**;
 - the **decay-adapted divergence-free trial space** (Stokes-stream
   family, dual-width radial functions, spectrum-designed taper) and the
   gate-validated assembly/landscape pipeline.
+
+Two numerical-analysis facts we **document but do not claim as novel** (they specialize standard practice — weighted/open quadrature for
+axis–equator standoffs, cf. Bernardi–Dauge–Maday 1999; and an
+operator-domain constraint on decay-adapted radial bases, cured by an
+origin mask) are recorded because they are silent at the Rayleigh–Ritz
+level yet fatal to the operator-norm survey. The landscape instrument
+itself is the residual-pseudospectrum / ResDMD validation principle
+applied to this operator, not a new method.
 
 Reuse of code is governed by the MIT `LICENSE` (which requires keeping
 the copyright notice); reuse of results or methods should additionally
