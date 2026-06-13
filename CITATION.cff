@@ -20,10 +20,10 @@ preferred-citation:
       given-names: P.
   year: 2026
   notes: "Preprint v1.1, June 2026. After Zenodo/arXiv posting, set identifiers below."
-  # identifiers:
-  #   - type: other
-  #     value: "arXiv:XXXX.XXXXX"
-  #     description: arXiv preprint ID
-  #   - type: doi
-  #     value: "10.XXXXX/XXXXX"
-  #     description: arXiv DOI
+  identifiers:
+     - type: other
+       value: "10.5281/zenodo.20675225"
+       description: Zenodo preprint ID
+     - type: doi
+       value: "10.5281/zenodo.20675225"
+       description: arXiv DOI
